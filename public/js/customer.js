@@ -119,11 +119,44 @@ $(document).ready(
 
                 if (contentType == 'json') {
                     $('pre code').each(function () {
-                        var cn = $(this).html();
-                        var jn = formatJson(cn);
-                        $(this).html(jn);
+                        var cn = $(this).text();
+                        try {
+                            var parsed = JSON.parse(cn);
+                            var jn = JSON.stringify(parsed, null, 4);
+                            $(this).text(jn);
+                        } catch (e) {
+                            var htmlContent = $(this).html();
+                            $(this).html(formatJson(htmlContent));
+                        }
                     });
                 }
+
+                // Add copy button to pre code blocks
+                $('pre code').each(function () {
+                    var $code = $(this);
+                    var $pre = $code.parent();
+                    if ($pre.find('.copy-button').length === 0) {
+                        var $btn = $('<button class="copy-button" title="Copy to clipboard"><span class="glyphicon glyphicon-duplicate"></span> Copy</button>');
+                        $pre.append($btn);
+                        
+                        $btn.on('click', function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            
+                            var text = $code.text();
+                            copyTextToClipboard(text, function (success) {
+                                if (success) {
+                                    $btn.html('<span class="glyphicon glyphicon-ok"></span> Copied!').addClass('btn-success');
+                                    setTimeout(function () {
+                                        $btn.html('<span class="glyphicon glyphicon-duplicate"></span> Copy').removeClass('btn-success');
+                                    }, 2000);
+                                } else {
+                                    $btn.html('Error').addClass('btn-danger');
+                                }
+                            });
+                        });
+                    }
+                });
 
                 $('#clearTubesSelect').on('click', function () {
                     $('#clear-tubes input[type=checkbox]:regex(name,' + $("#tubeSelector").val() + ')').prop('checked', true);
@@ -895,6 +928,30 @@ $(document).ready(
                         alert('error ajax...');
                     }
                 });
+            }
+
+            function copyTextToClipboard(text, callback) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(function () {
+                        callback(true);
+                    }, function () {
+                        callback(false);
+                    });
+                } else {
+                    var textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    try {
+                        var successful = document.execCommand('copy');
+                        callback(successful);
+                    } catch (err) {
+                        callback(false);
+                    }
+                    document.body.removeChild(textArea);
+                }
             }
         }
 );
