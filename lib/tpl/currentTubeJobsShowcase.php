@@ -100,7 +100,13 @@
                         <?php endif; ?>
 
                     </div>
-                    <pre><code class="tex"><?php echo htmlspecialchars(trim(var_export($job['data'], true), "'"), ENT_COMPAT) ?></code></pre>
+                    <pre><code class="tex"><?php
+                        if (is_string($job['data'])) {
+                            echo htmlspecialchars($job['data'], ENT_COMPAT);
+                        } else {
+                            echo htmlspecialchars(var_export($job['data'], true), ENT_COMPAT);
+                        }
+                    ?></code></pre>
                 </div>
             </div>
         <?php else: ?>
