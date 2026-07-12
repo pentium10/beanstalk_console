@@ -21,45 +21,7 @@
 
 define('BEANSTALK_CONSOLE_VERSION', '1.9.1');
 
-$localConfigFile = __DIR__ . '/config.local.php';
-if (file_exists($localConfigFile) && is_readable($localConfigFile) && basename(__FILE__) !== 'config.local.php') {
-    require $localConfigFile;
-    
-    $requiredKeys = array('servers', 'storage', 'auth', 'settings', 'tubeBodyDisplay', 'review');
-    $requiredNested = array(
-        'auth' => array('enabled', 'username', 'password'),
-        'settings' => array('tubePauseSeconds', 'autoRefreshTimeoutMs', 'searchResultLimit', 'enableJsonDecode', 'enableJobDataHighlight', 'enableAutoRefreshLoad', 'enableUnserialization', 'enableBase64Decode'),
-        'tubeBodyDisplay' => array('storage'),
-        'review' => array('enabled', 'chunkSize', 'bodyPreviewLength', 'allowReadyWhenUnwatched', 'allowDelayedWhenUnwatched', 'allowUnsafeReadyOverride', 'allowUnsafeDelayedOverride', 'neverIncludeBodySnapshot', 'storagePath')
-    );
-
-    $missing = array();
-    foreach ($requiredKeys as $key) {
-        if (!array_key_exists($key, $GLOBALS['config'])) {
-            $missing[] = $key;
-        } elseif (isset($requiredNested[$key])) {
-            foreach ($requiredNested[$key] as $subKey) {
-                if (!is_array($GLOBALS['config'][$key]) || !array_key_exists($subKey, $GLOBALS['config'][$key])) {
-                    $missing[] = $key . '.' . $subKey;
-                }
-            }
-        }
-    }
-
-    if (count($GLOBALS['config'], true) != 1 && !empty($missing)) {
-        die('Please update your config.local.php with all new options. You are missing: ' . implode(', ', $missing));
-    }
-    if (is_array($GLOBALS['config']['servers'])) {
-        return;
-    }
-}
-/**
- * =============================================================================
- * LOCAL CONFIGURATION `config.local.php` CONTENTS BELOW
- * =============================================================================
- */
-
-$GLOBALS['config'] = array(
+$defaultConfig = array(
     /**
      * List of servers available for all users
      */
@@ -132,3 +94,12 @@ $GLOBALS['config'] = array(
         'storagePath' => null,
     ),
 );
+
+$localConfigFile = __DIR__ . '/config.local.php';
+if (file_exists($localConfigFile) && is_readable($localConfigFile) && basename(__FILE__) !== 'config.local.php') {
+    $GLOBALS['config'] = array();
+    require $localConfigFile;
+    $GLOBALS['config'] = array_replace_recursive($defaultConfig, $GLOBALS['config']);
+} else {
+    $GLOBALS['config'] = $defaultConfig;
+}
