@@ -100,7 +100,7 @@
                         <?php endif; ?>
 
                     </div>
-                    <pre><code class="tex"><?php
+                    <pre><code class="tex json"><?php
                         if (is_string($job['data'])) {
                             echo htmlspecialchars($job['data'], ENT_COMPAT);
                         } else {
