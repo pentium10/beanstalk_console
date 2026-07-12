@@ -62,7 +62,16 @@ class JobBodyFormatter {
         $contentType = 'text';
 
         if (!empty($settings['enableBase64Decode'])) {
-            $decoded = base64_decode($display, true);
+            set_error_handler(array($this, 'exceptions_error_handler'));
+            try {
+                $decoded = base64_decode($display, true);
+            } catch (Exception $e) {
+                $decoded = false;
+            }
+            ob_get_clean();
+            // restore old error handler
+            restore_error_handler();
+
             if ($decoded !== false) {
                 $display = $decoded;
                 $peek = $decoded;
@@ -71,7 +80,16 @@ class JobBodyFormatter {
         }
 
         if (!empty($settings['enableUnserialization'])) {
-            $unserialized = @unserialize($display);
+            set_error_handler(array($this, 'exceptions_error_handler'));
+            try {
+                $unserialized = unserialize($display);
+            } catch (Exception $e) {
+                $unserialized = false;
+            }
+            ob_get_clean();
+            // restore old error handler
+            restore_error_handler();
+
             if ($unserialized !== false || $display === serialize(false)) {
                 $display = print_r($unserialized, true);
                 $peek = $unserialized;
@@ -94,5 +112,10 @@ class JobBodyFormatter {
             'peek_body' => $peek,
             'content_type' => $contentType,
         );
+    }
+
+    public function exceptions_error_handler($severity, $message, $filename, $lineno) {
+        echo '<span style="color:red">Unserialize or Base64decode got a fatal error, please include the necessary files, or deactivate unserialization from Settings (<a href="#" onclick="$(\'#settings\').modal();return false;">click to open</a>)</span></br>';
+        return false;
     }
 }
