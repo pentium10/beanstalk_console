@@ -119,9 +119,15 @@ $(document).ready(
 
                 if (contentType == 'json') {
                     $('pre code').each(function () {
-                        var cn = $(this).html();
-                        var jn = formatJson(cn);
-                        $(this).html(jn);
+                        var cn = $(this).text();
+                        try {
+                            var parsed = JSON.parse(cn);
+                            var jn = JSON.stringify(parsed, null, 4);
+                            $(this).text(jn);
+                        } catch (e) {
+                            var htmlContent = $(this).html();
+                            $(this).html(formatJson(htmlContent));
+                        }
                     });
                 }
 
