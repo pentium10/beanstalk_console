@@ -19,25 +19,9 @@
  * =============================================================================
  */
 
-define('BEANSTALK_CONSOLE_VERSION', '1.9');
+define('BEANSTALK_CONSOLE_VERSION', '1.9.2');
 
-$localConfigFile = __DIR__ . '/config.local.php';
-if (file_exists($localConfigFile) && is_readable($localConfigFile) && basename(__FILE__) !== 'config.local.php') {
-    require $localConfigFile;
-    if (count($GLOBALS['config'], true) != 1 && count($GLOBALS['config'], true) < 22) {
-        die('Please update your config.local.php with all new options. You are missing some.');
-    }
-    if (is_array($GLOBALS['config']['servers'])) {
-        return;
-    }
-}
-/**
- * =============================================================================
- * LOCAL CONFIGURATION `config.local.php` CONTENTS BELOW
- * =============================================================================
- */
-
-$GLOBALS['config'] = array(
+$defaultConfig = array(
     /**
      * List of servers available for all users
      */
@@ -77,6 +61,14 @@ $GLOBALS['config'] = array(
     ),
 
     /**
+     * Per-server, per-tube job body display overrides.
+     */
+    'tubeBodyDisplay' => array(
+        // null means dirname($config['storage']) . '/tube-body-display.json'.
+        'storage' => null,
+    ),
+
+    /**
      * Review batch settings.
      */
     'review' => array(
@@ -102,3 +94,12 @@ $GLOBALS['config'] = array(
         'storagePath' => null,
     ),
 );
+
+$localConfigFile = __DIR__ . '/config.local.php';
+if (file_exists($localConfigFile) && is_readable($localConfigFile) && basename(__FILE__) !== 'config.local.php') {
+    $GLOBALS['config'] = array();
+    require $localConfigFile;
+    $GLOBALS['config'] = array_replace_recursive($defaultConfig, $GLOBALS['config']);
+} else {
+    $GLOBALS['config'] = $defaultConfig;
+}
